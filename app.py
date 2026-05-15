@@ -362,9 +362,20 @@ def login():
                 flash('Las contraseñas no coinciden', 'error')
                 return redirect(url_for('login'))
                 
-            if User.query.filter_by(email=email).first():
-                flash('Este email ya esta registrado', 'error')
-                return redirect(url_for('login'))
+            existing_user = User.query.filter_by(email=email).first()
+            if existing_user:
+                if not getattr(existing_user, 'is_verified', True):
+                    # El usuario ya existe pero no está verificado, lo enviamos a verificar
+                    otp = str(random.randint(100000, 999999))
+                    existing_user.verification_code = otp
+                    db.session.commit()
+                    send_otp_email(email, otp)
+                    session['verify_email'] = email
+                    flash('Esta cuenta ya existe pero no ha sido verificada. Te enviamos un nuevo código.', 'info')
+                    return redirect(url_for('verificar_otp'))
+                else:
+                    flash('Este email ya esta registrado', 'error')
+                    return redirect(url_for('login'))
                 
             otp = str(random.randint(100000, 999999))
             hashed = generate_password_hash(password)
