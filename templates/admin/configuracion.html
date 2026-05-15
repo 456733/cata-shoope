@@ -1,0 +1,171 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Configuración - Cata Shoope{% endblock %}
+{% block admin_content %}
+<h2 style="margin-bottom:6px; color:#fff; font-size:1.6rem; font-weight:800;">Configuración</h2>
+<p style="color:#888; font-size:0.9rem; margin-bottom:24px;">Administra los datos de tu negocio, facturación y periféricos.</p>
+
+<form method="POST" action="{{ url_for('admin_configuracion') }}" enctype="multipart/form-data">
+
+    <!-- Row 1: 3 columns - General / Fiscal / DIAN -->
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; margin-bottom:20px;">
+
+        <!-- Información General -->
+        <div class="admin-card">
+            <h3 style="color:#f57c00; font-size:1.1rem; font-weight:800; margin-bottom:20px;">Información General</h3>
+
+            <label style="font-size:0.75rem; color:#aaa; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; display:block; margin-bottom:6px;">Nombre de la Tienda</label>
+            <input type="text" name="store_name" value="{{ config.store_name or 'Cata Shoope' }}" style="width:100%; padding:12px; border:1px solid var(--dark-border); border-radius:8px; background:var(--dark-bg); color:#fff; font-size:0.95rem; margin-bottom:16px;">
+
+            <label style="font-size:0.75rem; color:#aaa; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; display:block; margin-bottom:6px;">Tu Nombre (Administrador)</label>
+            <input type="text" name="admin_name" value="{{ config.admin_name or '' }}" style="width:100%; padding:12px; border:1px solid var(--dark-border); border-radius:8px; background:var(--dark-bg); color:#fff; font-size:0.95rem; margin-bottom:4px;">
+            <p style="font-size:0.75rem; color:#666; margin:0 0 16px;">Este es el nombre que aparece en la barra de navegación.</p>
+
+            <label style="font-size:0.75rem; color:#aaa; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; display:block; margin-bottom:6px;">Logo</label>
+            {% if config.logo %}
+            <img src="{{ config.logo }}" style="height:50px; margin-bottom:8px; border-radius:8px;">
+            {% endif %}
+            <input type="file" name="logo" accept="image/*" style="width:100%; padding:8px; border:1px solid var(--dark-border); border-radius:8px; background:var(--dark-bg); color:#fff; font-size:0.8rem; margin-bottom:4px;">
+            <p style="font-size:0.75rem; color:#666; margin:0 0 16px;">Formatos: JPG, PNG, WEBP. Se optimizará automáticamente.</p>
+
+            <label style="font-size:0.75rem; color:#aaa; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; display:block; margin-bottom:6px;">Código QR para Transferencias</label>
+            {% if config.qr_transfer %}
+            <img src="{{ config.qr_transfer }}" style="height:50px; margin-bottom:8px; border-radius:8px;">
+            {% endif %}
+            <input type="file" name="qr_transfer" accept="image/*" style="width:100%; padding:8px; border:1px solid var(--dark-border); border-radius:8px; background:var(--dark-bg); color:#fff; font-size:0.8rem; margin-bottom:4px;">
+            <p style="font-size:0.75rem; color:#666; margin:0;">Añade aquí tu QR de Nequi, Daviplata o Bancolombia. Se mostrará en el POS al cobrar por transferencia.</p>
+        </div>
+
+        <!-- Información Fiscal -->
+        <div class="admin-card">
+            <h3 style="color:#f57c00; font-size:1.1rem; font-weight:800; margin-bottom:20px;">Información Fiscal</h3>
+
+            <label style="font-size:0.75rem; color:#aaa; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; display:block; margin-bottom:6px;">Razón Social</label>
+            <input type="text" name="razon_social" value="{{ config.razon_social or '' }}" placeholder="Ej: CataShoope S.A.S" style="width:100%; padding:12px; border:1px solid var(--dark-border); border-radius:8px; background:var(--dark-bg); color:#fff; font-size:0.95rem; margin-bottom:16px;">
+
+            <label style="font-size:0.75rem; color:#aaa; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; display:block; margin-bottom:6px;">NIT</label>
+            <input type="text" name="nit" value="{{ config.nit or '' }}" placeholder="000.000.000-0" style="width:100%; padding:12px; border:1px solid var(--dark-border); border-radius:8px; background:var(--dark-bg); color:#fff; font-size:0.95rem; margin-bottom:16px;">
+
+            <label style="font-size:0.75rem; color:#aaa; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; display:block; margin-bottom:6px;">RUT</label>
+            <input type="text" name="rut" value="{{ config.rut or '' }}" placeholder="Número de RUT" style="width:100%; padding:12px; border:1px solid var(--dark-border); border-radius:8px; background:var(--dark-bg); color:#fff; font-size:0.95rem; margin-bottom:16px;">
+
+            <label style="font-size:0.75rem; color:#aaa; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; display:block; margin-bottom:6px;">Régimen Tributario</label>
+            <select name="regimen_tributario" style="width:100%; padding:12px; border:1px solid var(--dark-border); border-radius:8px; background:var(--dark-bg); color:#fff; font-size:0.95rem; margin-bottom:16px;">
+                <option value="No responsable de IVA" {{ 'selected' if config.regimen_tributario == 'No responsable de IVA' }}>No responsable de IVA</option>
+                <option value="Responsable de IVA" {{ 'selected' if config.regimen_tributario == 'Responsable de IVA' }}>Responsable de IVA</option>
+                <option value="Régimen Simple" {{ 'selected' if config.regimen_tributario == 'Régimen Simple' }}>Régimen Simple</option>
+            </select>
+
+            <label style="font-size:0.75rem; color:#aaa; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; display:block; margin-bottom:6px;">Gran Contribuyente (si aplica)</label>
+            <input type="text" name="gran_contribuyente" value="{{ config.gran_contribuyente or '' }}" placeholder="Ej: GRAN CONTRIBUYENTE F" style="width:100%; padding:12px; border:1px solid var(--dark-border); border-radius:8px; background:var(--dark-bg); color:#fff; font-size:0.95rem; margin-bottom:16px;">
+
+            <label style="font-size:0.75rem; color:#aaa; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; display:block; margin-bottom:6px;">Agente de Retención (si aplica)</label>
+            <input type="text" name="agente_retencion" value="{{ config.agente_retencion or '' }}" placeholder="Ej: Agente de retención de IVA" style="width:100%; padding:12px; border:1px solid var(--dark-border); border-radius:8px; background:var(--dark-bg); color:#fff; font-size:0.95rem;">
+        </div>
+
+        <!-- Resolución DIAN -->
+        <div class="admin-card">
+            <h3 style="color:#f57c00; font-size:1.1rem; font-weight:800; margin-bottom:20px;">🏛 Resolución DIAN</h3>
+
+            <label style="font-size:0.75rem; color:#aaa; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; display:block; margin-bottom:6px;">Número de Resolución</label>
+            <input type="text" name="resolucion_numero" value="{{ config.resolucion_numero or '' }}" placeholder="Ej: 18764000001234" style="width:100%; padding:12px; border:1px solid var(--dark-border); border-radius:8px; background:var(--dark-bg); color:#fff; font-size:0.95rem; margin-bottom:16px;">
+
+            <label style="font-size:0.75rem; color:#aaa; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; display:block; margin-bottom:6px;">Vigencia de Resolución</label>
+            <input type="text" name="resolucion_vigencia" value="{{ config.resolucion_vigencia or '' }}" placeholder="Ej: Del 01/01/2026 al 31/12/2026" style="width:100%; padding:12px; border:1px solid var(--dark-border); border-radius:8px; background:var(--dark-bg); color:#fff; font-size:0.95rem; margin-bottom:16px;">
+
+            <label style="font-size:0.75rem; color:#aaa; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; display:block; margin-bottom:6px;">Rango Autorizado Desde</label>
+            <input type="text" name="resolucion_rango_desde" value="{{ config.resolucion_rango_desde or '' }}" placeholder="CS-0001" style="width:100%; padding:12px; border:1px solid var(--dark-border); border-radius:8px; background:var(--dark-bg); color:#fff; font-size:0.95rem; margin-bottom:16px;">
+
+            <label style="font-size:0.75rem; color:#aaa; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; display:block; margin-bottom:6px;">Rango Autorizado Hasta</label>
+            <input type="text" name="resolucion_rango_hasta" value="{{ config.resolucion_rango_hasta or '' }}" placeholder="CS-9999" style="width:100%; padding:12px; border:1px solid var(--dark-border); border-radius:8px; background:var(--dark-bg); color:#fff; font-size:0.95rem;">
+        </div>
+    </div>
+
+    <!-- Row 2: Impresión y Ticket -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
+        <div class="admin-card">
+            <h3 style="color:#f57c00; font-size:1.1rem; font-weight:800; margin-bottom:20px;">🖨 Impresora y Cajón</h3>
+
+            <label style="font-size:0.75rem; color:#aaa; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; display:block; margin-bottom:6px;">Impresora Térmica</label>
+            <div style="display:flex; gap:8px; margin-bottom:4px;">
+                <select name="printer_name" id="printerSelect" style="flex:1; padding:12px; border:1px solid var(--dark-border); border-radius:8px; background:var(--dark-bg); color:#fff; font-size:0.95rem;">
+                    <option value="">Sin impresora (imprimir por navegador)</option>
+                    {% if config.printer_name %}
+                    <option value="{{ config.printer_name }}" selected>{{ config.printer_name }}</option>
+                    {% endif %}
+                </select>
+                <button type="button" onclick="detectPrinters()" style="padding:12px 16px; border:1px solid var(--dark-border); border-radius:8px; background:var(--dark-bg); color:#fff; cursor:pointer; font-size:0.85rem; white-space:nowrap;">🔍 Detectar</button>
+            </div>
+            <p style="font-size:0.75rem; color:#666; margin:0 0 16px;">Selecciona tu impresora térmica POS para impresión directa.</p>
+
+            <label style="font-size:0.75rem; color:#aaa; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; display:block; margin-bottom:6px;">Mensaje del Ticket</label>
+            <input type="text" name="ticket_message" value="{{ config.ticket_message or 'Gracias por su compra' }}" style="width:100%; padding:12px; border:1px solid var(--dark-border); border-radius:8px; background:var(--dark-bg); color:#fff; font-size:0.95rem; margin-bottom:16px;">
+
+            <div style="display:flex; flex-direction:column; gap:12px;">
+                <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:0.9rem; color:#ccc;">
+                    <input type="checkbox" name="auto_print" {{ 'checked' if config.auto_print }} style="width:18px; height:18px; accent-color:var(--pink);">
+                    Imprimir ticket automáticamente al cobrar
+                </label>
+                <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:0.9rem; color:#ccc;">
+                    <input type="checkbox" name="auto_drawer" {{ 'checked' if config.auto_drawer }} style="width:18px; height:18px; accent-color:var(--pink);">
+                    Abrir cajón de dinero automáticamente
+                </label>
+            </div>
+        </div>
+
+        <!-- Página de Inicio -->
+        <div class="admin-card">
+            <h3 style="color:#f57c00; font-size:1.1rem; font-weight:800; margin-bottom:20px;">🏠 Página de Inicio (Hero)</h3>
+
+            <label style="font-size:0.75rem; color:#aaa; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; display:block; margin-bottom:6px;">Título (parte blanca)</label>
+            <input type="text" name="hero_title_white" value="{{ config.hero_title_white or '' }}" placeholder="Ej: Tu Estilo," style="width:100%; padding:12px; border:1px solid var(--dark-border); border-radius:8px; background:var(--dark-bg); color:#fff; font-size:0.95rem; margin-bottom:16px;">
+
+            <label style="font-size:0.75rem; color:#aaa; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; display:block; margin-bottom:6px;">Título (parte rosa/destacada)</label>
+            <input type="text" name="hero_title_pink" value="{{ config.hero_title_pink or '' }}" placeholder="Ej: Nuestra Pasión" style="width:100%; padding:12px; border:1px solid var(--dark-border); border-radius:8px; background:var(--dark-bg); color:#fff; font-size:0.95rem; margin-bottom:16px;">
+
+            <label style="font-size:0.75rem; color:#aaa; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; display:block; margin-bottom:6px;">Subtítulo</label>
+            <textarea name="hero_subtitle" rows="2" placeholder="Descripción corta para la página de inicio" style="width:100%; padding:12px; border:1px solid var(--dark-border); border-radius:8px; background:var(--dark-bg); color:#fff; font-size:0.95rem; resize:none; margin-bottom:16px;">{{ config.hero_subtitle or '' }}</textarea>
+
+            <label style="font-size:0.75rem; color:#aaa; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; display:block; margin-bottom:6px;">Imagen Hero</label>
+            {% if config.hero_image %}
+            <img src="{{ config.hero_image }}" style="height:50px; margin-bottom:8px; border-radius:8px;">
+            {% endif %}
+            <input type="file" name="hero_image" accept="image/*" style="width:100%; padding:8px; border:1px solid var(--dark-border); border-radius:8px; background:var(--dark-bg); color:#fff; font-size:0.8rem;">
+        </div>
+    </div>
+
+    <button type="submit" style="padding:16px 40px; border-radius:10px; background:linear-gradient(135deg, #22C55E, #16a34a); border:none; color:#fff; font-size:1rem; font-weight:700; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+        Guardar Configuración
+    </button>
+</form>
+
+<style>
+    @media(max-width: 768px) {
+        form > div { grid-template-columns: 1fr !important; }
+    }
+</style>
+{% endblock %}
+
+{% block admin_scripts %}
+<script>
+function detectPrinters() {
+    const select = document.getElementById('printerSelect');
+    const current = select.value;
+    fetch('/admin/api/hardware/printers')
+        .then(r => r.json())
+        .then(data => {
+            select.innerHTML = '<option value="">Sin impresora (imprimir por navegador)</option>';
+            (data.printers || []).forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p;
+                opt.textContent = p;
+                if (p === current) opt.selected = true;
+                select.appendChild(opt);
+            });
+            if (data.printers && data.printers.length === 0) {
+                alert('No se detectaron impresoras instaladas.');
+            }
+        })
+        .catch(() => alert('Error al detectar impresoras.'));
+}
+</script>
+{% endblock %}

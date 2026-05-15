@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% block title %}Mis Pedidos - Cata Shoope{% endblock %}
+{% block content %}
+<section style="padding: 100px 40px 60px; max-width: 1000px; margin: 0 auto;">
+    <h1 style="font-family: var(--font-title); font-size: 2.2rem; font-weight: 800; margin-bottom: 8px; color: #1a1a1a; letter-spacing: -1px;">Mis Pedidos</h1>
+    <p style="color: #888; margin-bottom: 40px; font-size: 1rem;">Revisa el estado y el historial de tus compras.</p>
+
+    {% if orders %}
+    <div style="background: #fff; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid #eee;">
+                    <th style="text-align: left; padding: 20px 24px; font-size: 0.8rem; text-transform: uppercase; color: #888; font-weight: 700; letter-spacing: 0.5px;">Pedido</th>
+                    <th style="text-align: left; padding: 20px 24px; font-size: 0.8rem; text-transform: uppercase; color: #888; font-weight: 700; letter-spacing: 0.5px;">Fecha</th>
+                    <th style="text-align: left; padding: 20px 24px; font-size: 0.8rem; text-transform: uppercase; color: #888; font-weight: 700; letter-spacing: 0.5px;">Estado</th>
+                    <th style="text-align: left; padding: 20px 24px; font-size: 0.8rem; text-transform: uppercase; color: #888; font-weight: 700; letter-spacing: 0.5px;">Total</th>
+                    <th style="text-align: right; padding: 20px 24px; font-size: 0.8rem; text-transform: uppercase; color: #888; font-weight: 700; letter-spacing: 0.5px;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for o in orders %}
+                <tr style="border-bottom: 1px solid #f5f5f5;">
+                    <td style="padding: 20px 24px;">
+                        <div style="font-family: var(--font-title); font-weight: 800; font-size: 1rem; color: #1a1a1a; margin-bottom: 4px;">{{ o.order_number or ('ORD-%03d' % o.id) }}</div>
+                        <div style="font-size: 0.8rem; color: #aaa;">{{ o.items|length }} artículo(s)</div>
+                    </td>
+                    <td style="padding: 20px 24px; font-size: 0.95rem; color: #1a1a1a; font-weight: 500;">{{ o.created_at.strftime('%Y-%m-%d') if o.created_at else '' }}</td>
+                    <td style="padding: 20px 24px;">
+                        {% if o.status == 'completed' %}
+                        <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; background: #e8f5e9; color: #2e7d32;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                            Completado
+                        </span>
+                        {% elif o.status == 'confirmed' %}
+                        <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; background: #e3f2fd; color: #1565c0;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                            Confirmado
+                        </span>
+                        {% elif o.status == 'pending' %}
+                        <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; background: #fff8e1; color: #f57c00;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            Pendiente
+                        </span>
+                        {% elif o.status == 'cancelled' %}
+                        <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; background: #ffebee; color: #c62828;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                            Cancelado
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 20px 24px; font-family: var(--font-title); font-weight: 800; font-size: 1.1rem; color: #1a1a1a;">$ {{ '{:,.0f}'.format(o.total|int).replace(',', '.') }}</td>
+                    <td style="padding: 20px 24px; text-align: right; display: flex; justify-content: flex-end; gap: 16px; align-items: center;">
+                        {% if o.status == 'pending' %}
+                        <form method="POST" action="{{ url_for('cancelar_pedido', oid=o.id) }}" style="margin:0;" onsubmit="return confirm('¿Estás seguro de que deseas cancelar este pedido?');">
+                            <button type="submit" style="background:none; border:none; color:#e53935; font-size:0.9rem; display:inline-flex; align-items:center; gap:6px; font-weight:500; cursor:pointer; padding:0; outline:none;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                                Cancelar
+                            </button>
+                        </form>
+                        {% endif %}
+                        <a href="#" onclick="toggleDetail({{ o.id }}); return false;" style="color: #888; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px; font-weight: 500; text-decoration: none;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            Ver Detalle
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modals for Orders -->
+    {% for o in orders %}
+    <div id="modal-{{ o.id }}" class="order-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+        <div style="background:#fff; width:90%; max-width:600px; border-radius:16px; padding:32px; position:relative; max-height:90vh; overflow-y:auto; box-shadow:0 10px 40px rgba(0,0,0,0.2);">
+            <button onclick="closeModal({{ o.id }})" style="position:absolute; top:20px; right:20px; background:none; border:none; font-size:1.5rem; color:#aaa; cursor:pointer;">&times;</button>
+            <h2 style="font-size:1.5rem; font-weight:800; margin-bottom:24px; color:#1a1a1a;">Detalle del Pedido <span style="color:var(--pink);">{{ o.order_number or ('ORD-%03d' % o.id) }}</span></h2>
+            
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; background:#f9f9f9; padding:20px; border-radius:12px;">
+                <div>
+                    <span style="font-size:0.8rem; color:#888; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; display:block;">Fecha</span>
+                    <span style="font-weight:600; color:#1a1a1a;">{{ o.created_at.strftime('%Y-%m-%d %H:%M') if o.created_at else '' }}</span>
+                </div>
+                <div>
+                    <span style="font-size:0.8rem; color:#888; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; display:block;">Método de Pago</span>
+                    <span style="font-weight:600; color:#1a1a1a; text-transform:capitalize;">{{ o.payment_preference or 'No especificado' }}</span>
+                </div>
+                <div>
+                    <span style="font-size:0.8rem; color:#888; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; display:block;">Tipo de Entrega</span>
+                    <span style="font-weight:600; color:#1a1a1a; text-transform:capitalize;">{{ o.delivery_type or 'No especificado' }}</span>
+                </div>
+                <div>
+                    <span style="font-size:0.8rem; color:#888; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; display:block;">Total Pagado/A Pagar</span>
+                    <span style="font-weight:800; color:var(--pink); font-size:1.1rem;">{{ o.total|cop }}</span>
+                </div>
+            </div>
+
+            {% if o.client_address and o.delivery_type == 'domicilio' %}
+            <div style="margin-bottom:24px;">
+                <h4 style="font-size:1rem; font-weight:700; margin-bottom:8px; color:#333;">Dirección de Envío</h4>
+                <p style="margin:0; font-size:0.95rem; color:#555;">{{ o.client_address }}</p>
+                {% if o.client_phone %}<p style="margin:4px 0 0; font-size:0.95rem; color:#555;">Tel: {{ o.client_phone }}</p>{% endif %}
+            </div>
+            {% endif %}
+
+            <h4 style="font-size:1rem; font-weight:700; margin-bottom:12px; color:#333;">Productos ({{ o.items|length }})</h4>
+            <div style="border:1px solid #eee; border-radius:12px; overflow:hidden;">
+                {% for item in o.items %}
+                <div style="display:flex; justify-content:space-between; padding:12px 16px; border-bottom:1px solid #eee; font-size:0.95rem; background:#fff;">
+                    <div>
+                        <span style="font-weight:600; color:#1a1a1a;">{{ item.product_name or (item.product.name if item.product else 'Producto') }}</span>
+                        <span style="color:#888; margin-left:8px;">(Talla: {{ item.size or 'N/A' }})</span>
+                        <span style="color:#888; margin-left:8px;">x{{ item.quantity }}</span>
+                    </div>
+                    <span style="font-weight:700; color:#1a1a1a;">{{ (item.price * item.quantity)|cop }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            
+            {% if o.admin_message %}
+            <div style="margin-top:24px; background:rgba(233,30,122,0.05); border:1px solid rgba(233,30,122,0.2); padding:16px; border-radius:12px;">
+                <strong style="color:var(--pink); font-size:0.9rem; margin-bottom:4px; display:block;">Mensaje de la tienda</strong>
+                <p style="margin:0; font-size:0.95rem; color:#333;">{{ o.admin_message }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+
+    {% else %}
+    <div style="text-align:center; padding:60px 20px; background:#fff; border:1px solid #eee; border-radius:12px;">
+        <p style="font-size:1.2rem; color:#888; margin-bottom:8px;">No tienes pedidos aun</p>
+        <p style="color:#aaa; margin-bottom:24px;">Explora nuestro catalogo y haz tu primer pedido</p>
+        <a href="{{ url_for('catalogo') }}" class="btn btn-primary" style="border-radius:20px;">Ver Catalogo</a>
+    </div>
+    {% endif %}
+</section>
+
+<script>
+function toggleDetail(id) {
+    const modal = document.getElementById('modal-' + id);
+    if(modal) modal.style.display = 'flex';
+}
+function closeModal(id) {
+    const modal = document.getElementById('modal-' + id);
+    if(modal) modal.style.display = 'none';
+}
+window.onclick = function(event) {
+    if (event.target.classList.contains('order-modal')) {
+        event.target.style.display = "none";
+    }
+}
+</script>
+{% endblock %}

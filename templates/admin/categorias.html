@@ -1,0 +1,75 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Categorias - Cata Shoope{% endblock %}
+{% block admin_content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+    <h2>Categorias</h2>
+    <button onclick="document.getElementById('addCatModal').classList.add('active')" class="btn btn-primary btn-sm">+ Nueva Categoria</button>
+</div>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:16px;">
+    {% for cat in categories %}
+    <div class="admin-card" style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+            <h3 style="font-size:1rem; margin-bottom:4px;">{{ cat.name }}</h3>
+            <span style="font-size:0.8rem; color:#888;">{{ cat.gender or 'Sin genero' }} - {{ cat.products|length }} productos</span>
+        </div>
+        <button onclick="deleteCategory({{ cat.id }})" class="btn btn-danger btn-sm">Eliminar</button>
+    </div>
+    {% endfor %}
+</div>
+
+{% if not categories %}
+<div class="admin-card" style="text-align:center; padding:60px;">
+    <p style="color:#888;">No hay categorias. Crea la primera.</p>
+</div>
+{% endif %}
+
+<!-- Add Category Modal -->
+<div id="addCatModal" class="modal-overlay">
+    <div class="modal-box" style="max-width:400px;">
+        <h3 style="margin-bottom:16px;">Nueva Categoria</h3>
+        <div style="margin-bottom:12px;">
+            <label style="font-size:0.85rem; color:#aaa; display:block; margin-bottom:4px;">Nombre</label>
+            <input type="text" id="catName" required style="width:100%; padding:10px; border:1px solid var(--dark-border); border-radius:8px; background:var(--dark-bg); color:#fff;">
+        </div>
+        <div style="margin-bottom:16px;">
+            <label style="font-size:0.85rem; color:#aaa; display:block; margin-bottom:4px;">Genero</label>
+            <select id="catGender" style="width:100%; padding:10px; border:1px solid var(--dark-border); border-radius:8px; background:var(--dark-bg); color:#fff;">
+                <option value="mujer">Mujer</option>
+                <option value="hombre">Hombre</option>
+                <option value="unisex">Unisex</option>
+            </select>
+        </div>
+        <div style="display:flex; gap:8px; justify-content:flex-end;">
+            <button onclick="document.getElementById('addCatModal').classList.remove('active')" class="btn btn-sm" style="background:transparent; border:1px solid var(--dark-border); color:#aaa;">Cancelar</button>
+            <button onclick="addCategory()" class="btn btn-primary btn-sm">Crear</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_scripts %}
+<script>
+function addCategory() {
+    const name = document.getElementById('catName').value.trim();
+    const gender = document.getElementById('catGender').value;
+    if (!name) return;
+    fetch('/admin/api/category/add', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({name, gender})
+    }).then(() => location.reload());
+}
+
+function deleteCategory(id) {
+    if (confirm('Eliminar esta categoria? Solo se puede si no tiene productos.')) {
+        fetch(`/admin/api/category/${id}/delete`, {method: 'POST'})
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) alert(data.error);
+                else location.reload();
+            });
+    }
+}
+</script>
+{% endblock %}

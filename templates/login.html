@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ingresar - Cata Shoope</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='images/logo_cata.png') }}" type="image/png">
+</head>
+<body style="min-height:100vh; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#fff0f5,#fff);">
+    <div style="background:#fff; border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,0.1); padding:48px; max-width:420px; width:90%;">
+        <div style="text-align:center; margin-bottom:32px;">
+            <img src="{{ url_for('static', filename='images/logo_cata.png') }}" alt="Cata Shoope" style="height:60px; width:auto; mix-blend-mode:multiply;">
+            <h2 style="margin-top:12px; font-size:1.5rem;">Bienvenido</h2>
+            <p style="color:#888; font-size:0.9rem;">Inicia sesion o crea tu cuenta</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for cat, msg in messages %}
+            <div style="background:#fff0f0; color:#e53935; padding:10px 16px; border-radius:8px; margin-bottom:16px; font-size:0.85rem;">{{ msg }}</div>
+            {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Tab buttons -->
+        <div style="display:flex; gap:0; margin-bottom:24px; border-radius:10px; overflow:hidden; border:1px solid #eee;">
+            <button type="button" id="tabLogin" onclick="showTab('login')" style="flex:1; padding:10px; font-weight:600; font-size:0.9rem; border:none; cursor:pointer; background:var(--pink); color:#fff;">Iniciar Sesion</button>
+            <button type="button" id="tabRegister" onclick="showTab('register')" style="flex:1; padding:10px; font-weight:600; font-size:0.9rem; border:none; cursor:pointer; background:#f5f5f5; color:#666;">Registrarse</button>
+        </div>
+
+        <!-- Login Form -->
+        <form id="formLogin" method="POST" action="{{ url_for('login') }}">
+            <input type="hidden" name="action" value="login">
+            <div style="margin-bottom:16px;">
+                <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:6px; color:#333;">Email</label>
+                <input type="email" name="email" required placeholder="tu@email.com" style="width:100%; padding:12px 16px; border:1px solid #ddd; border-radius:10px; font-size:0.95rem; outline:none; transition:border 0.2s;" onfocus="this.style.borderColor='var(--pink)'" onblur="this.style.borderColor='#ddd'">
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:6px; color:#333;">Contrasena</label>
+                <input type="password" name="password" required placeholder="Tu contrasena" style="width:100%; padding:12px 16px; border:1px solid #ddd; border-radius:10px; font-size:0.95rem; outline:none; transition:border 0.2s;" onfocus="this.style.borderColor='var(--pink)'" onblur="this.style.borderColor='#ddd'">
+            </div>
+            <div style="text-align:right; margin-bottom:24px;">
+                <a href="{{ url_for('recuperar_password') }}" style="font-size:0.85rem; color:var(--pink); text-decoration:none;">¿Olvidaste tu contraseña?</a>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%; padding:14px; border-radius:10px; font-size:1rem;">Iniciar Sesion</button>
+        </form>
+
+        <!-- Register Form -->
+        <form id="formRegister" method="POST" action="{{ url_for('login') }}" style="display:none;">
+            <input type="hidden" name="action" value="register">
+            <div style="margin-bottom:16px;">
+                <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:6px; color:#333;">Nombre</label>
+                <input type="text" name="username" required placeholder="Tu nombre" style="width:100%; padding:12px 16px; border:1px solid #ddd; border-radius:10px; font-size:0.95rem; outline:none;">
+            </div>
+            <div style="margin-bottom:16px;">
+                <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:6px; color:#333;">Email</label>
+                <input type="email" name="email" required placeholder="tu@email.com" style="width:100%; padding:12px 16px; border:1px solid #ddd; border-radius:10px; font-size:0.95rem; outline:none;">
+            </div>
+            <div style="margin-bottom:16px;">
+                <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:6px; color:#333;">Contrasena</label>
+                <input type="password" name="password" required placeholder="Crea una contrasena" style="width:100%; padding:12px 16px; border:1px solid #ddd; border-radius:10px; font-size:0.95rem; outline:none;">
+            </div>
+            <div style="margin-bottom:24px;">
+                <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:6px; color:#333;">Confirmar Contrasena</label>
+                <input type="password" name="password_confirm" required placeholder="Repite tu contrasena" style="width:100%; padding:12px 16px; border:1px solid #ddd; border-radius:10px; font-size:0.95rem; outline:none;">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%; padding:14px; border-radius:10px; font-size:1rem;">Crear Cuenta</button>
+        </form>
+
+        <div style="text-align:center; margin-top:24px;">
+            <a href="{{ url_for('index') }}" style="color:#888; font-size:0.85rem;">Volver al inicio</a>
+        </div>
+    </div>
+
+    <script>
+    function showTab(tab) {
+        document.getElementById('formLogin').style.display = tab === 'login' ? 'block' : 'none';
+        document.getElementById('formRegister').style.display = tab === 'register' ? 'block' : 'none';
+        document.getElementById('tabLogin').style.background = tab === 'login' ? 'var(--pink)' : '#f5f5f5';
+        document.getElementById('tabLogin').style.color = tab === 'login' ? '#fff' : '#666';
+        document.getElementById('tabRegister').style.background = tab === 'register' ? 'var(--pink)' : '#f5f5f5';
+        document.getElementById('tabRegister').style.color = tab === 'register' ? '#fff' : '#666';
+    }
+    </script>
+</body>
+</html>

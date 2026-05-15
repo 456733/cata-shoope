@@ -1,0 +1,134 @@
+/* ============================================================
+   MercAPP — Debts/Credit (Fiados) Styles
+   ============================================================ */
+
+/* ============================================================
+   DEBT FILTERS
+   ============================================================ */
+.debt-filters {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* ============================================================
+   DEBT AMOUNTS
+   ============================================================ */
+.debt-amount-pending {
+    color: #cf8c8c;
+}
+
+.debt-amount-paid {
+    color: #8cbf8c;
+}
+
+/* ============================================================
+   FIADO BANNER (Red client header in POS mode)
+   ============================================================ */
+.fiado-banner {
+    background: linear-gradient(135deg, #B71C1C, #C62828);
+    border-bottom: 3px solid #E53935;
+    padding: 0;
+    animation: fiadoPulse 3s ease-in-out infinite;
+}
+
+@keyframes fiadoPulse {
+    0%, 100% { box-shadow: 0 2px 12px rgba(229, 57, 53, 0.3); }
+    50% { box-shadow: 0 4px 24px rgba(229, 57, 53, 0.5); }
+}
+
+.fiado-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 20px;
+}
+
+.fiado-back-btn {
+    padding: 6px 14px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: var(--radius-sm);
+    color: #fff;
+    font-family: var(--font);
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+.fiado-back-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    color: #fff;
+}
+
+.fiado-client-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.fiado-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.fiado-client-name {
+    font-size: 1.15rem;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fiado-debt-display {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    white-space: nowrap;
+}
+
+.fiado-debt-label {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 600;
+}
+
+.fiado-debt-value {
+    font-size: 1.2rem;
+    font-weight: 900;
+    color: #FFCDD2;
+    letter-spacing: -0.5px;
+}
+
+/* ============================================================
+   FIADO CHARGE BUTTON (different from normal caja)
+   ============================================================ */
+.fiado-charge-btn {
+    background: linear-gradient(135deg, #C62828, #E53935) !important;
+    box-shadow: 0 4px 20px rgba(229, 57, 53, 0.3) !important;
+}
+
+.fiado-charge-btn:hover {
+    box-shadow: 0 6px 30px rgba(229, 57, 53, 0.5) !important;
+}
+
+/* ============================================================
+   CLIENT ROW HOVER
+   ============================================================ */
+.debt-client-row:hover {
+    background: var(--bg-card-hover);
+    cursor: pointer;
+}
+
+.debt-client-row td {
+    transition: var(--transition);
+}

@@ -1,0 +1,195 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Inventario - Cata Shoope{% endblock %}
+{% block admin_content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+    <h2>Inventario</h2>
+    <button onclick="document.getElementById('addModal').classList.add('active')" class="btn btn-primary btn-sm">+ Nuevo Producto</button>
+</div>
+
+<div class="admin-card">
+    {% if products %}
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Imagen</th>
+                <th>Producto</th>
+                <th>Categoria</th>
+                <th>Precio</th>
+                <th>Tallas</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in products %}
+            <tr>
+                <td>
+                    {% if p.image %}
+                    <img src="{{ p.image }}" style="width:40px; height:40px; object-fit:cover; border-radius:6px;">
+                    {% else %}
+                    <div style="width:40px; height:40px; background:var(--dark-bg); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:0.7rem; color:#555;">N/A</div>
+                    {% endif %}
+                </td>
+                <td style="font-weight:600;">{{ p.name }}</td>
+                <td>{{ p.category.name if p.category else '-' }}</td>
+                <td style="color:var(--pink); font-weight:700;">{{ p.price|cop }}</td>
+                <td style="font-size:0.8rem; color:#aaa;">{{ p.sizes or '-' }}</td>
+                <td>
+                    <div style="display:flex; gap:6px;">
+                        <button onclick="editProduct({{ p.id }}, '{{ p.name }}', {{ p.price }}, {{ p.category_id }}, '{{ p.description or '' }}', '{{ p.sizes or '{}' }}')" class="btn btn-sm btn-blue">Editar</button>
+                        <button onclick="deleteProduct({{ p.id }})" class="btn btn-sm btn-danger">Eliminar</button>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="text-align:center; color:#888; padding:40px;">No hay productos. Agrega el primero.</p>
+    {% endif %}
+</div>
+
+<!-- Add Product Modal -->
+<div id="addModal" class="modal-overlay">
+    <div class="modal-box">
+        <h3 style="margin-bottom:16px;" id="modalTitle">Nuevo Producto</h3>
+        <form id="productForm" enctype="multipart/form-data">
+            <input type="hidden" id="editId" value="">
+            <div style="margin-bottom:12px;">
+                <label style="font-size:0.85rem; font-weight:600; color:#555; display:block; margin-bottom:4px;">Nombre del Producto</label>
+                <input type="text" id="pName" required style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; background:#fff; color:#333; outline:none; transition:border 0.2s;" onfocus="this.style.borderColor='var(--pink)'" onblur="this.style.borderColor='#ddd'">
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:12px;">
+                <div>
+                    <label style="font-size:0.85rem; font-weight:600; color:#555; display:block; margin-bottom:4px;">Precio</label>
+                    <input type="number" id="pPrice" required min="0" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; background:#fff; color:#333; outline:none;">
+                </div>
+                <div>
+                    <label style="font-size:0.85rem; font-weight:600; color:#555; display:block; margin-bottom:4px;">Categoría</label>
+                    <select id="pCategory" required style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; background:#fff; color:#333; outline:none;">
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}">{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="font-size:0.85rem; font-weight:600; color:#555; display:block; margin-bottom:4px;">Descripción</label>
+                <textarea id="pDesc" rows="2" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; background:#fff; color:#333; resize:none; outline:none;"></textarea>
+            </div>
+
+            <!-- Sizes -->
+            <div style="margin-bottom:12px;">
+                <label style="font-size:0.85rem; font-weight:600; color:#555; display:block; margin-bottom:8px;">Tallas y Stock</label>
+                <div style="display:flex; gap:8px; margin-bottom:12px;">
+                    <button type="button" id="btnSizeClothes" onclick="toggleSizeType('clothes')" style="flex:1; padding:10px; border-radius:8px; font-weight:600; font-size:0.85rem; border:1px solid var(--pink); background:var(--pink); color:#fff; cursor:pointer; transition:all 0.2s;">Ropa (S,M,L...)</button>
+                    <button type="button" id="btnSizeShoes" onclick="toggleSizeType('shoes')" style="flex:1; padding:10px; border-radius:8px; font-weight:600; font-size:0.85rem; border:1px solid #ddd; background:#f9f9f9; color:#888; cursor:pointer; transition:all 0.2s;">Zapatos (35-45)</button>
+                </div>
+                <div id="sizesContainer" style="background:#f9f9f9; padding:12px; border-radius:8px; border:1px solid #eee;"></div>
+            </div>
+
+            <div style="margin-bottom:24px;">
+                <label style="font-size:0.85rem; font-weight:600; color:#555; display:block; margin-bottom:4px;">Imagen del Producto</label>
+                <input type="file" id="pImage" accept="image/*" style="width:100%; padding:10px; border:1px dashed #bbb; border-radius:8px; background:#fafafa; color:#333; font-size:0.85rem; cursor:pointer;">
+            </div>
+            <div style="display:flex; gap:8px; justify-content:flex-end;">
+                <button type="button" onclick="closeModal()" class="btn btn-sm" style="background:transparent; border:1px solid var(--dark-border); color:#aaa;">Cancelar</button>
+                <button type="submit" class="btn btn-primary btn-sm">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_scripts %}
+<script>
+let currentSizeType = 'clothes';
+const clothesSizes = ['XS','S','M','L','XL','XXL'];
+const shoeSizes = Array.from({length:11}, (_, i) => (35+i).toString());
+
+    function toggleSizeType(type) {
+        currentSizeType = type;
+        document.getElementById('btnSizeClothes').style.background = type === 'clothes' ? 'var(--pink)' : '#f9f9f9';
+        document.getElementById('btnSizeClothes').style.color = type === 'clothes' ? '#fff' : '#888';
+        document.getElementById('btnSizeClothes').style.borderColor = type === 'clothes' ? 'var(--pink)' : '#ddd';
+        document.getElementById('btnSizeShoes').style.background = type === 'shoes' ? 'var(--pink)' : '#f9f9f9';
+        document.getElementById('btnSizeShoes').style.color = type === 'shoes' ? '#fff' : '#888';
+        document.getElementById('btnSizeShoes').style.borderColor = type === 'shoes' ? 'var(--pink)' : '#ddd';
+        renderSizes({});
+    }
+
+    function renderSizes(existing) {
+        const sizes = currentSizeType === 'clothes' ? clothesSizes : shoeSizes;
+        const container = document.getElementById('sizesContainer');
+        container.innerHTML = sizes.map(s => `
+            <div style="display:inline-flex; align-items:center; gap:6px; margin:6px;">
+                <span style="font-size:0.85rem; font-weight:600; width:30px; color:#333;">${s}</span>
+                <input type="number" min="0" value="${existing[s] || 0}" data-size="${s}" class="size-input"
+                    style="width:55px; padding:6px; border:1px solid #ccc; border-radius:6px; background:#fff; color:#1a1a1a; text-align:center; font-size:0.9rem; outline:none;">
+            </div>
+        `).join('');
+    }
+
+function getSizesJSON() {
+    const inputs = document.querySelectorAll('.size-input');
+    const sizes = {};
+    inputs.forEach(i => {
+        const val = parseInt(i.value) || 0;
+        if (val > 0) sizes[i.dataset.size] = val;
+    });
+    return JSON.stringify(sizes);
+}
+
+function closeModal() {
+    document.getElementById('addModal').classList.remove('active');
+    document.getElementById('editId').value = '';
+    document.getElementById('pName').value = '';
+    document.getElementById('pPrice').value = '';
+    document.getElementById('pDesc').value = '';
+    document.getElementById('modalTitle').textContent = 'Nuevo Producto';
+}
+
+function editProduct(id, name, price, catId, desc, sizes) {
+    document.getElementById('editId').value = id;
+    document.getElementById('pName').value = name;
+    document.getElementById('pPrice').value = price;
+    document.getElementById('pCategory').value = catId;
+    document.getElementById('pDesc').value = desc;
+    document.getElementById('modalTitle').textContent = 'Editar Producto';
+    try {
+        const s = JSON.parse(sizes.replace(/'/g, '"'));
+        renderSizes(s);
+    } catch { renderSizes({}); }
+    document.getElementById('addModal').classList.add('active');
+}
+
+function deleteProduct(id) {
+    if (confirm('Eliminar este producto?')) {
+        fetch(`/admin/api/product/${id}/delete`, {method: 'POST'}).then(() => location.reload());
+    }
+}
+
+// Init sizes
+renderSizes({});
+
+document.getElementById('productForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const editId = document.getElementById('editId').value;
+    const formData = new FormData();
+    formData.append('name', document.getElementById('pName').value);
+    formData.append('price', document.getElementById('pPrice').value);
+    formData.append('category_id', document.getElementById('pCategory').value);
+    formData.append('description', document.getElementById('pDesc').value);
+    formData.append('sizes', getSizesJSON());
+    const img = document.getElementById('pImage').files[0];
+    if (img) formData.append('image', img);
+
+    const url = editId ? `/admin/api/product/${editId}/update` : '/admin/api/product/add';
+    fetch(url, {method: 'POST', body: formData})
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) location.reload();
+            else alert('Error: ' + (data.error || 'Error'));
+        });
+});
+</script>
+{% endblock %}

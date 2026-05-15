@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin - Cata Shoope{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='images/logo_cata.png') }}" type="image/png">
+    <style>
+        body { background: var(--dark-bg); color: var(--dark-text); margin: 0; }
+        .admin-topbar {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            background: var(--dark-card); border-bottom: 1px solid var(--dark-border);
+            height: 56px; display: flex; align-items: center; padding: 0 20px;
+            justify-content: space-between;
+        }
+        .admin-topbar .left { display: flex; align-items: center; gap: 6px; }
+        .admin-topbar .logo {
+            width: 32px; height: 32px; border-radius: 6px; overflow: hidden; margin-right: 8px;
+        }
+        .admin-topbar .logo img { width: 100%; height: 100%; object-fit: cover; }
+        .admin-topbar .nav-links { display: flex; gap: 4px; }
+        .admin-topbar .nav-links a {
+            padding: 8px 14px; border-radius: 8px; font-size: 0.85rem;
+            color: #aaa; font-weight: 500; transition: all 0.2s;
+        }
+        .admin-topbar .nav-links a:hover { color: #fff; }
+        .admin-topbar .nav-links a.active {
+            background: var(--pink); color: #fff; font-weight: 600;
+        }
+        .admin-topbar .right { display: flex; align-items: center; gap: 16px; }
+        .admin-topbar .right .user-name { font-size: 0.9rem; font-weight: 600; color: #fff; }
+        .admin-topbar .right .logout { color: #aaa; font-size: 0.85rem; }
+        .admin-topbar .right .logout:hover { color: #e53935; }
+
+        .admin-main { padding: 72px 24px 24px; min-height: 100vh; }
+
+        .admin-card { background: var(--dark-card); border: 1px solid var(--dark-border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .admin-stat { text-align: center; }
+        .admin-stat .value { font-size: 1.8rem; font-weight: 800; color: #fff; }
+        .admin-stat .label { font-size: 0.8rem; color: #888; margin-top: 4px; }
+        .admin-table { width: 100%; border-collapse: collapse; }
+        .admin-table th { text-align: left; padding: 10px; color: #888; font-size: 0.8rem; text-transform: uppercase; border-bottom: 1px solid var(--dark-border); }
+        .admin-table td { padding: 10px; border-bottom: 1px solid var(--dark-border); font-size: 0.9rem; }
+        .admin-table tr:hover { background: rgba(255,255,255,0.03); }
+        .badge { padding: 3px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+        .badge-pending { background: #fff3e0; color: #f57c00; }
+        .badge-confirmed { background: #e3f2fd; color: #1565c0; }
+        .badge-completed { background: #e8f5e9; color: #2e7d32; }
+        .badge-cancelled { background: #ffebee; color: #c62828; }
+        .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:999; display:none; align-items:center; justify-content:center; }
+        .modal-overlay.active { display:flex; }
+        .modal-box { background:var(--dark-card); border:1px solid var(--dark-border); border-radius:16px; padding:24px; max-width:500px; width:90%; max-height:80vh; overflow-y:auto; }
+        
+        @media(max-width: 768px) {
+            .admin-topbar { padding: 0 10px; }
+            .admin-topbar .nav-links { gap: 2px; }
+            .admin-topbar .nav-links a { padding: 6px 8px; font-size: 0.75rem; }
+            .admin-topbar .right .user-name { display: none; }
+            .pos-grid { grid-template-columns: 1fr !important; height: auto !important; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="admin-topbar">
+        <div class="left">
+            <div class="logo">
+                <img src="{{ url_for('static', filename='images/logo_cata.png') }}" alt="Cata Shoope">
+            </div>
+            <div class="nav-links">
+                <a href="{{ url_for('admin_caja') }}" class="{{ 'active' if request.endpoint == 'admin_caja' }}">Caja</a>
+                <a href="{{ url_for('admin_ventas') }}" class="{{ 'active' if request.endpoint == 'admin_ventas' }}">Ventas</a>
+                <a href="{{ url_for('admin_historial') }}" class="{{ 'active' if request.endpoint == 'admin_historial' }}">Historial</a>
+                <a href="{{ url_for('admin_deudas') }}" class="{{ 'active' if request.endpoint == 'admin_deudas' }}">Deudas</a>
+                <a href="{{ url_for('admin_pedidos') }}" class="{{ 'active' if request.endpoint == 'admin_pedidos' }}" style="position:relative;">Pedidos{% if pending_orders_count %}<span style="position:absolute; top:2px; right:2px; background:var(--pink); color:#fff; border-radius:50%; width:18px; height:18px; font-size:0.65rem; display:flex; align-items:center; justify-content:center; font-weight:800;">{{ pending_orders_count }}</span>{% endif %}</a>
+                <a href="{{ url_for('admin_configuracion') }}" class="{{ 'active' if request.endpoint == 'admin_configuracion' or request.endpoint == 'admin_ajustes' or request.endpoint == 'admin_inventario' or request.endpoint == 'admin_categorias' }}">Configuracion</a>
+            </div>
+        </div>
+        <div class="right">
+            {% if low_stock_products %}
+            <div style="position:relative; cursor:pointer;" onclick="document.getElementById('lowStockModal').style.display='flex'" title="{{ low_stock_products|length }} productos por agotarse">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f57c00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <span style="position:absolute; top:-4px; right:-6px; background:#e53935; color:#fff; border-radius:50%; width:14px; height:14px; font-size:0.6rem; display:flex; align-items:center; justify-content:center;">{{ low_stock_products|length }}</span>
+            </div>
+            {% endif %}
+            <span class="user-name">{{ current_user.name }}</span>
+            <a href="{{ url_for('logout') }}" class="logout">Salir</a>
+        </div>
+    </nav>
+
+    <main class="admin-main">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for cat, msg in messages %}
+            <div style="background:rgba(233,30,122,0.1); color:var(--pink); padding:10px 16px; border-radius:8px; margin-bottom:16px; font-size:0.85rem;">{{ msg }}</div>
+            {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Low Stock Modal -->
+        {% if low_stock_products %}
+        <div id="lowStockModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+            <div style="background:#1a1a2e; width:90%; max-width:500px; border-radius:16px; padding:32px; border:1px solid rgba(255,255,255,0.1); box-shadow:0 20px 50px rgba(0,0,0,0.5);">
+                <h3 style="color:#f57c00; margin-bottom:8px; font-size:1.3rem; display:flex; align-items:center; gap:8px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    Alerta de Inventario
+                </h3>
+                <p style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">Los siguientes productos tienen variantes con menos de 3 unidades en stock:</p>
+                
+                <div style="max-height:300px; overflow-y:auto; padding-right:10px;">
+                    {% for p in low_stock_products %}
+                    <div style="background:var(--dark-bg); border:1px solid var(--dark-border); padding:12px; border-radius:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="color:#fff; font-weight:600; font-size:0.95rem; margin-bottom:4px;">{{ p.name }}</div>
+                            <div style="color:#888; font-size:0.8rem;">Variantes bajas: 
+                                {% set s_dict = p.sizes|from_json %}
+                                {% for size, qty in s_dict.items() %}
+                                    {% if qty|int < 3 %}
+                                        <span style="color:#e53935; font-weight:700;">{{ size }} ({{ qty }})</span>{% if not loop.last %}, {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <a href="{{ url_for('admin_inventario') }}" style="color:var(--pink); text-decoration:none; font-size:0.85rem; font-weight:600;">Reabastecer</a>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; margin-top:24px;">
+                    <button onclick="document.getElementById('lowStockModal').style.display='none'" style="background:transparent; border:1px solid rgba(255,255,255,0.2); color:#ccc; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600;">Cerrar</button>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% block admin_content %}{% endblock %}
+    </main>
+    {% block admin_scripts %}{% endblock %}
+</body>
+</html>

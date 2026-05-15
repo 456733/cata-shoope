@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block title %}Cata Shoope - Inspira tu Estilo{% endblock %}
+{% block content %}
+<!-- HERO -->
+<section style="position: relative; height: calc(100vh - 80px); background-image: url('{{ config.hero_image if config and config.hero_image else '' }}'); background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; text-align: center;">
+    <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.3); z-index: 1;"></div>
+    <div style="position: relative; z-index: 2; max-width: 800px; padding: 0 20px;">
+        <h1 style="font-family: var(--font-title); font-size: 5.5rem; font-weight: 800; letter-spacing: -2px; margin-bottom: 20px; line-height: 1.1;">
+            <span style="color: #fff;">{{ config.hero_title_white if config and config.hero_title_white else 'Inspira tu' }}</span> <span style="color: #e91e7a;">{{ config.hero_title_pink if config and config.hero_title_pink else 'Estilo' }}</span>
+        </h1>
+        <p style="color: #fff; font-size: 1.25rem; font-weight: 400; opacity: 0.95; margin-bottom: 40px; max-width: 650px; margin-left: auto; margin-right: auto; line-height: 1.6;">
+            {{ config.hero_subtitle if config and config.hero_subtitle else 'Descubre nuestra nueva colección. Prendas exclusivas diseñadas para destacar tu personalidad en cada momento.' }}
+        </p>
+        <a href="{{ url_for('catalogo') }}" style="display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(90deg, #e91e7a, #ff6b3b); color: #fff; padding: 16px 40px; border-radius: 40px; font-weight: 700; font-size: 1.1rem; text-decoration: none; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(233,30,122,0.3);">
+            Ver Colección &rarr;
+        </a>
+    </div>
+</section>
+
+<!-- NUEVOS LLEGADOS -->
+<section style="padding: 100px 40px; max-width: 1300px; margin: 0 auto;">
+    <div style="text-align: center; margin-bottom: 60px;">
+        <h2 style="font-family: var(--font-title); font-size: 2.5rem; font-weight: 800; color: #1a1a1a; margin-bottom: 12px; letter-spacing: -1px;">Nuevos Llegados</h2>
+        <div style="width: 60px; height: 4px; background: #e91e7a; margin: 0 auto; border-radius: 2px;"></div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;">
+        {% for p in products[:4] %}
+        <div class="product-card-hover" style="border-radius: 12px; overflow: hidden; background: #fff; display: flex; flex-direction: column; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+            <a href="{{ url_for('producto', pid=p.id) }}" style="display: block; position: relative; height: 350px; background: #f8f9fa;">
+                {% if p.image %}
+                <img src="{{ p.image }}" alt="{{ p.name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;">
+                {% else %}
+                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #aaa;">Sin Imagen</div>
+                {% endif %}
+            </a>
+            <div style="padding: 16px 8px;">
+                <div style="font-size: 0.8rem; color: #888; font-weight: 500; margin-bottom: 4px;">{{ p.category.name if p.category else 'Categoría' }}</div>
+                <a href="{{ url_for('producto', pid=p.id) }}" class="product-title-hover" style="display: block; font-family: var(--font-title); font-size: 1.15rem; font-weight: 800; color: #1a1a1a; margin-bottom: 16px; text-decoration: none; letter-spacing: -0.5px; transition: color 0.2s;">{{ p.name }}</a>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-family: var(--font-title); font-size: 1.25rem; font-weight: 800; color: #1a1a1a;">{{ p.price|cop }}</span>
+                    <a href="{{ url_for('producto', pid=p.id) }}" class="btn-cart-hover" style="width: 44px; height: 44px; border-radius: 50%; background: #000; color: #fff; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; text-decoration: none;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- PARA ELLA / PARA EL -->
+<section style="display: grid; grid-template-columns: 1fr 1fr; min-height: 500px;">
+    <!-- Para Ella -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; background: #fff0f5;">
+        <div style="padding: 60px 40px; display: flex; flex-direction: column; justify-content: center;">
+            <span style="color: #e91e7a; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Colección Femenina</span>
+            <h2 style="font-family: var(--font-title); font-size: 3.5rem; font-weight: 900; color: #1a1a1a; margin-bottom: 16px; letter-spacing: -1.5px; line-height: 1.1;">Para Ella</h2>
+            <p style="color: #555; font-size: 1rem; margin-bottom: 32px; max-width: 300px; line-height: 1.6;">Elegancia, comodidad y estilo en cada prenda. Encuentra el outfit perfecto para deslumbrar.</p>
+            <a href="{{ url_for('catalogo', gender='mujer') }}" style="color: #1a1a1a; font-weight: 800; font-size: 1rem; text-decoration: none; display: flex; align-items: center; gap: 8px;">
+                Comprar Ahora &rarr;
+            </a>
+        </div>
+        <div style="background: #f8f9fa;">
+            <img src="{{ config.ella_image if config and config.ella_image else '' }}" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+    </div>
+    
+    <!-- Para Él -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; background: #1a1a2e;">
+        <div style="padding: 60px 40px; display: flex; flex-direction: column; justify-content: center;">
+            <span style="color: #3b82f6; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Colección Masculina</span>
+            <h2 style="font-family: var(--font-title); font-size: 3.5rem; font-weight: 900; color: #fff; margin-bottom: 16px; letter-spacing: -1.5px; line-height: 1.1;">Para Él</h2>
+            <p style="color: #aaa; font-size: 1rem; margin-bottom: 32px; max-width: 300px; line-height: 1.6;">Diseños modernos y versátiles. Calidad premium para el hombre que busca marcar la diferencia.</p>
+            <a href="{{ url_for('catalogo', gender='hombre') }}" style="color: #fff; font-weight: 800; font-size: 1rem; text-decoration: none; display: flex; align-items: center; gap: 8px;">
+                Comprar Ahora &rarr;
+            </a>
+        </div>
+        <div style="background: #111;">
+            <img src="{{ config.el_image if config and config.el_image else '' }}" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+    </div>
+</section>
+
+<style>
+.product-card-hover:hover { transform: translateY(-4px) !important; box-shadow: 0 12px 24px rgba(0,0,0,0.12) !important; }
+.product-card-hover:hover .product-title-hover { color: #e91e7a !important; }
+.product-title-hover:hover { color: #e91e7a !important; }
+.btn-cart-hover:hover { background: #e91e7a !important; }
+
+@media(max-width: 1024px) {
+    section[style*="display: grid; grid-template-columns: 1fr 1fr; min-height: 500px;"] {
+        grid-template-columns: 1fr !important;
+    }
+}
+@media(max-width: 900px) {
+    div[style*="grid-template-columns: repeat(4, 1fr)"] {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    nav[style*="display: grid;"] {
+        display: flex !important;
+        justify-content: space-between !important;
+        padding: 0 20px !important;
+    }
+    nav[style*="display: grid;"] > div:nth-child(2) {
+        display: none !important;
+    }
+}
+@media(max-width: 600px) {
+    div[style*="grid-template-columns: repeat(4, 1fr)"] {
+        grid-template-columns: 1fr !important;
+    }
+    div[style*="grid-template-columns: 1fr 1fr; background: #fff0f5;"] {
+        grid-template-columns: 1fr !important;
+    }
+    div[style*="grid-template-columns: 1fr 1fr; background: #1a1a2e;"] {
+        grid-template-columns: 1fr !important;
+    }
+    h1 span {
+        font-size: 3.5rem !important;
+    }
+}
+</style>
+{% endblock %}

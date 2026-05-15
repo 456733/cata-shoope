@@ -1,0 +1,166 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Pedidos - Cata Shoope{% endblock %}
+{% block admin_content %}
+<div style="padding: 20px;">
+    <h2 style="color: #fff; font-size: 1.6rem; font-weight: 800; margin-bottom: 24px; font-family: var(--font-title);">Pedidos de Clientes</h2>
+
+    {% if orders %}
+    <div style="display:flex; flex-direction:column; gap:16px;">
+        {% for o in orders %}
+        <div style="background-color: #1a1a2e; border-radius: 12px; padding: 24px; border: 1px solid rgba(255,255,255,0.05); font-family: 'Inter', sans-serif;">
+            
+            <!-- Header -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <div style="color:#fff; font-size:1.1rem; font-weight:600; display:flex; align-items:center; gap:8px;">
+                    {{ o.order_number or ('CS-%04d' % o.id) }} 
+                    <span style="color:#888; font-weight:400; font-size:0.95rem;">
+                        {{ o.created_at.strftime('%d/%m/%Y %H:%M') if o.created_at else '' }} · {{ o.client_name or (o.user.name if o.user else 'Cliente') }}
+                    </span>
+                    <span style="background:rgba(255,255,255,0.1); color:#ccc; padding:2px 8px; border-radius:4px; font-size:0.75rem; margin-left:8px; text-transform:uppercase;">
+                        {% if o.delivery_type == 'domicilio' %}Domicilio{% else %}Tienda{% endif %}
+                    </span>
+                </div>
+                
+                {% if o.status == 'pending' %}
+                <div style="background-color: #FFF3E0; color: #F57C00; padding: 6px 16px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing:0.5px;">PENDIENTE</div>
+                {% elif o.status == 'confirmed' %}
+                <div style="background-color: #E3F2FD; color: #1565C0; padding: 6px 16px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing:0.5px;">CONFIRMADO</div>
+                {% elif o.status == 'completed' %}
+                <div style="background-color: #E8F5E9; color: #2E7D32; padding: 6px 16px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing:0.5px;">COMPLETADO</div>
+                {% elif o.status == 'cancelled' %}
+                <div style="background-color: #FFEBEE; color: #C62828; padding: 6px 16px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing:0.5px;">CANCELADO</div>
+                {% endif %}
+            </div>
+
+            <!-- Client Contact Info (Hidden in image but useful, showing subtly) -->
+            <div style="color: #666; font-size: 0.85rem; margin-bottom: 16px; display:flex; gap:16px;">
+                {% if o.client_phone %}<span>Tel: {{ o.client_phone }}</span>{% endif %}
+                {% if o.client_email %}<span>Email: {{ o.client_email }}</span>{% endif %}
+                {% if o.client_address %}<span>Dir: {{ o.client_address }}</span>{% endif %}
+                {% if o.payment_preference %}<span>Pago preferido: {{ o.payment_preference }}</span>{% endif %}
+            </div>
+
+            <!-- Items -->
+            <div style="margin-bottom:24px; display:flex; flex-direction:column; gap:12px;">
+                {% for item in o.items %}
+                <div style="color: #aaa; font-size: 0.95rem; display: flex; justify-content: space-between; align-items:center;">
+                    <span>{{ item.product_name or (item.product.name if item.product else 'Producto') }} {% if item.size %}({{ item.size }}){% endif %} &times; {{ item.quantity }}</span>
+                    <span>${{ '{:,.0f}'.format(item.price * item.quantity).replace(',', '.') }}</span>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% if o.admin_message %}
+            <div style="margin-bottom:24px; padding:12px 16px; background:rgba(233,30,122,0.1); border-radius:8px; font-size:0.9rem; color:#e91e7a; border:1px solid rgba(233,30,122,0.2);">
+                <strong>Mensaje enviado:</strong> {{ o.admin_message }}
+            </div>
+            {% endif %}
+
+            <!-- Footer -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top:20px;">
+                <div style="color: #FF5722; font-size: 1.2rem; font-weight: 800;">
+                    Total: ${{ '{:,.0f}'.format(o.total).replace(',', '.') }}
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    {% if o.status == 'pending' %}
+                    <button onclick="confirmOrder({{ o.id }}, '{{ o.payment_preference or 'efectivo' }}')" style="background-color: #22C55E; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size:0.9rem; cursor: pointer; display:flex; align-items:center; gap:6px; transition:opacity 0.2s;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        Confirmar
+                    </button>
+                    <button onclick="cancelOrder({{ o.id }})" style="background-color: #EF4444; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size:0.9rem; cursor: pointer; display:flex; align-items:center; gap:6px; transition:opacity 0.2s;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        Cancelar
+                    </button>
+                    {% elif o.status == 'confirmed' %}
+                    <button onclick="completeOrder({{ o.id }})" style="background-color: #3B82F6; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size:0.9rem; cursor: pointer; display:flex; align-items:center; gap:6px; transition:opacity 0.2s;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        Completar y Facturar
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="background-color: #1a1a2e; border-radius: 12px; padding: 60px; text-align: center; border: 1px solid rgba(255,255,255,0.05);">
+        <p style="color:#888; font-size:1.1rem;">No hay pedidos pendientes</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Confirm Modal -->
+<div id="confirmModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div style="background:#1a1a2e; width:90%; max-width:400px; border-radius:16px; padding:32px; border:1px solid rgba(255,255,255,0.1); box-shadow:0 20px 50px rgba(0,0,0,0.5);">
+        <h3 style="color:#fff; margin-bottom:20px; font-size:1.3rem;">Confirmar Pedido</h3>
+        
+        <label style="font-size:0.9rem; color:#aaa; display:block; margin-bottom:8px;">Método de Pago Recibido</label>
+        <select id="confirmPayment" style="width:100%; padding:12px; border:1px solid rgba(255,255,255,0.1); border-radius:8px; background:rgba(0,0,0,0.2); color:#fff; font-size:1rem; margin-bottom:20px; outline:none;">
+            <option value="efectivo">Efectivo</option>
+            <option value="transferencia">Transferencia</option>
+        </select>
+
+        <label style="font-size:0.9rem; color:#aaa; display:block; margin-bottom:8px;">Mensaje para el cliente (opcional)</label>
+        <textarea id="confirmMessage" rows="3" placeholder="Ej: Tu pedido esta listo para recoger..." style="width:100%; padding:12px; border:1px solid rgba(255,255,255,0.1); border-radius:8px; background:rgba(0,0,0,0.2); color:#fff; font-size:0.95rem; resize:none; margin-bottom:24px; outline:none;"></textarea>
+        
+        <div style="display:flex; gap:12px; justify-content:flex-end;">
+            <button onclick="document.getElementById('confirmModal').style.display='none'" style="background:transparent; border:1px solid rgba(255,255,255,0.2); color:#ccc; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600;">Cancelar</button>
+            <button onclick="submitConfirm()" style="background:#22C55E; border:none; color:#fff; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600;">Confirmar Pedido</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_scripts %}
+<script>
+let pendingOrderId = null;
+
+function confirmOrder(id, prefPayment) {
+    pendingOrderId = id;
+    document.getElementById('confirmMessage').value = '';
+    
+    // Select preferred payment by default
+    const paymentSelect = document.getElementById('confirmPayment');
+    if(prefPayment && prefPayment.toLowerCase().includes('trans')) {
+        paymentSelect.value = 'transferencia';
+    } else {
+        paymentSelect.value = 'efectivo';
+    }
+
+    document.getElementById('confirmModal').style.display = 'flex';
+}
+
+function submitConfirm() {
+    const msg = document.getElementById('confirmMessage').value;
+    const payment = document.getElementById('confirmPayment').value;
+    
+    fetch(`/admin/api/order/${pendingOrderId}/confirm`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            admin_message: msg,
+            payment_method: payment
+        })
+    }).then(() => location.reload());
+}
+
+function cancelOrder(id) {
+    if (confirm('¿Seguro que deseas cancelar este pedido?')) {
+        fetch(`/admin/api/order/${id}/cancel`, {method: 'POST'}).then(() => location.reload());
+    }
+}
+
+function completeOrder(id) {
+    const sendEmail = confirm('¿Enviar la factura al correo electrónico del cliente?');
+    fetch(`/admin/api/order/${id}/complete`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({send_email: sendEmail})
+    }).then(() => location.reload());
+}
+</script>
+<style>
+button:hover { opacity: 0.9; }
+</style>
+{% endblock %}

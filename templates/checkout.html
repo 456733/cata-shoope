@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% block title %}Checkout - Cata Shoope{% endblock %}
+{% block content %}
+<section style="padding:80px 5% 60px; max-width:600px; margin:0 auto;">
+    <h1 style="font-size:1.8rem; font-weight:800; margin-bottom:24px; color:#1a1a1a;">Confirmar Pedido</h1>
+
+    <div style="background:#fff; border-radius:16px; box-shadow:0 8px 30px rgba(0,0,0,0.06); padding:32px;">
+        <h3 style="font-size:1rem; font-weight:700; margin-bottom:16px; color:#333;">Resumen de tu pedido</h3>
+        
+        <!-- Summary Items -->
+        <div style="margin-bottom:24px;">
+            {% for item in products %}
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid #f0f0f0;">
+                <div style="display:flex; flex-direction:column;">
+                    <span style="font-size:0.95rem; font-weight:600; color:#1a1a1a;">{{ item.product.name }}</span>
+                    <span style="font-size:0.8rem; color:#888;">Talla: {{ item.size or 'Unica' }} <span style="margin:0 8px;">|</span> Cant: {{ item.quantity }}</span>
+                </div>
+                <span style="font-weight:700; color:#1a1a1a;">{{ item.subtotal|cop }}</span>
+            </div>
+            {% endfor %}
+            <div style="display:flex; justify-content:space-between; align-items:center; padding-top:16px;">
+                <span style="font-size:1.1rem; font-weight:600; color:#555;">Total</span>
+                <span style="font-size:1.3rem; font-weight:800; color:var(--pink);">{{ total|cop }}</span>
+            </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('checkout') }}" id="checkoutForm">
+            <input type="hidden" name="buy_now_pid" value="{{ buy_now_pid or '' }}">
+            <input type="hidden" name="buy_now_size" value="{{ buy_now_size or '' }}">
+            <input type="hidden" name="buy_now_qty" value="{{ buy_now_qty or '' }}">
+            <input type="hidden" name="selected_items" value="{{ selected_items or '' }}">
+            <!-- Delivery Options -->
+            <div style="margin-bottom:24px;">
+                <label style="font-weight:700; font-size:0.95rem; display:block; margin-bottom:12px; color:#333;">Opciones de Entrega</label>
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                    <label class="delivery-card" style="display:flex; align-items:flex-start; gap:12px; padding:16px; border:2px solid var(--pink); border-radius:12px; background:#fff0f5; cursor:pointer; transition:all 0.2s;">
+                        <input type="radio" name="delivery_type" value="domicilio" checked style="margin-top:4px;">
+                        <div>
+                            <strong style="display:block; color:#1a1a1a; margin-bottom:4px;">Envío en El Rosal, Cundinamarca</strong>
+                            <p style="font-size:0.85rem; color:#666; margin:0; line-height:1.4;">Déjanos tu dirección y te enviaremos tu pedido. Pagas al recibir en efectivo o transferencia.</p>
+                        </div>
+                    </label>
+                    <label class="delivery-card" style="display:flex; align-items:flex-start; gap:12px; padding:16px; border:2px solid #eee; border-radius:12px; background:#fff; cursor:pointer; transition:all 0.2s;">
+                        <input type="radio" name="delivery_type" value="tienda" style="margin-top:4px;">
+                        <div>
+                            <strong style="display:block; color:#1a1a1a; margin-bottom:4px;">Recoger en Tienda Física</strong>
+                            <p style="font-size:0.85rem; color:#666; margin:0; line-height:1.4;">Realiza tu pedido y asiste a nuestra tienda para reclamar. Pagas en el mostrador.</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Dynamic Form Fields -->
+            <div id="deliveryFields" style="background:#f9f9f9; padding:20px; border-radius:12px; margin-bottom:24px;">
+                <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:16px; color:#333;">Datos para el envío</h4>
+                
+                <div style="display:grid; grid-template-columns:1fr; gap:16px;">
+                    <div>
+                        <label style="font-size:0.85rem; color:#666; display:block; margin-bottom:6px;">Dirección completa</label>
+                        <input type="text" name="address" id="inpAddress" placeholder="Ej: Calle 1 # 2-3, Barrio X" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; font-size:0.95rem; outline:none;">
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                        <div>
+                            <label style="font-size:0.85rem; color:#666; display:block; margin-bottom:6px;">Teléfono</label>
+                            <input type="tel" name="phone" required placeholder="Tu número" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; font-size:0.95rem; outline:none;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.85rem; color:#666; display:block; margin-bottom:6px;">Correo</label>
+                            <input type="email" name="email" value="{{ current_user.email }}" required style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; font-size:0.95rem; outline:none;">
+                        </div>
+                    </div>
+                    <div>
+                        <label style="font-size:0.85rem; color:#666; display:block; margin-bottom:6px;">¿Cómo pagarás al recibir?</label>
+                        <select name="payment" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; font-size:0.95rem; outline:none; background:#fff;">
+                            <option value="efectivo">Efectivo</option>
+                            <option value="transferencia">Transferencia (Nequi/Bancolombia)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background:rgba(233,30,122,0.08); border-radius:8px; padding:12px 16px; display:flex; align-items:center; gap:8px; margin-bottom:24px;">
+                <span style="color:var(--pink); font-weight:800; font-size:1.2rem;">!</span>
+                <p style="margin:0; font-size:0.85rem; color:#333; font-weight:600;" id="alertText">Pago al recibir tu pedido en El Rosal (efectivo o transferencia).</p>
+            </div>
+
+            <button type="submit" style="width:100%; padding:18px; border:none; background:linear-gradient(135deg, #e91e7a, #c2185b); color:#fff; border-radius:30px; font-size:1.1rem; font-weight:700; cursor:pointer; box-shadow:0 4px 15px rgba(233,30,122,0.3); transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                Confirmar Pedido
+            </button>
+        </form>
+    </div>
+</section>
+
+<script>
+    const radios = document.querySelectorAll('input[name="delivery_type"]');
+    const fields = document.getElementById('deliveryFields');
+    const address = document.getElementById('inpAddress');
+    const phone = document.querySelector('input[name="phone"]');
+    const email = document.querySelector('input[name="email"]');
+    const alertText = document.getElementById('alertText');
+    const cards = document.querySelectorAll('.delivery-card');
+
+    radios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            cards.forEach(c => {
+                c.style.borderColor = '#eee';
+                c.style.background = '#fff';
+            });
+            const parent = this.closest('.delivery-card');
+            parent.style.borderColor = 'var(--pink)';
+            parent.style.background = '#fff0f5';
+
+            if(this.value === 'domicilio') {
+                fields.style.display = 'block';
+                address.required = true;
+                if(phone) phone.required = true;
+                if(email) email.required = true;
+                alertText.innerText = 'Pago al recibir tu pedido en El Rosal (efectivo o transferencia).';
+            } else {
+                fields.style.display = 'none';
+                address.required = false;
+                if(phone) phone.required = false;
+                if(email) email.required = false;
+                alertText.innerText = 'Te esperamos en nuestra tienda física. Pagas al recoger tu pedido.';
+            }
+        });
+    });
+</script>
+{% endblock %}

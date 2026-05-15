@@ -1,0 +1,50 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Historial - Cata Shoope{% endblock %}
+{% block admin_content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+    <h2>Historial de Ventas</h2>
+    <a href="{{ url_for('admin_ventas_export') }}" class="btn btn-primary btn-sm" style="background:#28a745; border-color:#28a745; text-decoration:none; display:inline-flex; align-items:center; gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        Exportar a Excel
+    </a>
+</div>
+
+<div class="admin-card">
+    {% if sales %}
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Fecha</th>
+                <th>Cliente</th>
+                <th>Metodo</th>
+                <th>Productos</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sale in sales %}
+            <tr>
+                <td>{{ sale.id }}</td>
+                <td>{{ sale.created_at.strftime('%d/%m/%Y %H:%M') if sale.created_at else '' }}</td>
+                <td>{{ sale.client_name or '-' }}</td>
+                <td>
+                    <span class="badge" style="background:{{ '#e8f5e9' if sale.payment_method == 'efectivo' else '#e3f2fd' }}; color:{{ '#2e7d32' if sale.payment_method == 'efectivo' else '#1565c0' }};">
+                        {{ sale.payment_method or 'N/A' }}
+                    </span>
+                </td>
+                <td style="font-size:0.8rem; color:#aaa;">
+                    {% for item in sale.items %}
+                    {{ item.quantity }}x {{ item.product.name if item.product else 'Producto' }}{{ ', ' if not loop.last else '' }}
+                    {% endfor %}
+                </td>
+                <td style="font-weight:700;">${{ '{:,.0f}'.format(sale.total) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="text-align:center; color:#888; padding:40px;">No hay ventas registradas</p>
+    {% endif %}
+</div>
+{% endblock %}
